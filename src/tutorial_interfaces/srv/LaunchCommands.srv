@@ -1,0 +1,5 @@
+string command
+string stop
+int32 flag
+---
+bool success

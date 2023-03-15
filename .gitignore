@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+
+build/
+
+install/
+
+.vscode/
+
+log/
+
+src/cpp_srvcli/release/

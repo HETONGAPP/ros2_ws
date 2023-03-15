@@ -1,0 +1,162 @@
+<!-- <!DOCTYPE html>
+<html>
+
+<head>
+    <title>WebRTC ROS</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <script src="index.js"></script>
+</head>
+
+<body>
+    <h1>WebRTC ROS</h1>
+    <p id="status"><noscript>JavaScript required</noscript></p>
+    <h2>Camera Topics</h2>
+    <ul id="camera_topics_list"></ul>
+    <h2>Image Topics</h2>
+    <ul id="image_topics_list"></ul>
+</body>
+
+</html> -->
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>WebRTC ROS</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <script src="index.js"></script>
+</head>
+
+<body>
+    <button id="launchButton" onclick="launchCommand()">Launch ROS2 Launch File</button>
+    <button id="stopButton" onclick="launchCommandStop()">Stop ROS2 Launch File</button>
+    <!-- <h1>Rosbridge demo</h1> -->
+
+    <!-- <p>To see this page update:</p>
+    <ul>
+        <li>Run a Rosbridge connection at <code>ws://192.168.0.179:9090</code></li>
+        <li>Start publishing ROS messages to <code>/my_topic</code></li>
+    </ul> -->
+
+    <!-- <p>View the full tutorial at <a href="https://foxglove.dev/blog/using-rosbridge-with-ros1" target="_blank">Using
+            Rosbridge with ROS 1</a> or <a href="https://foxglove.dev/blog/using-rosbridge-with-ros2"
+            target="_blank">Using
+            Rosbridge with ROS 2</a>.</p> -->
+
+    <hr />
+
+    <p>Connection: <span id="status" style="font-weight: bold;">N/A</span></p>
+    <!-- <p><code>/my_topic</code> messages received:
+    <ul id="messages" style="font-weight: bold;"></ul> -->
+    <!-- </p> -->
+
+    <script type="text/javascript" src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+    <script type="text/javascript" type="text/javascript">
+        // Create ros object to communicate over your Rosbridge connection
+        try {
+            const ros = new ROSLIB.Ros({ url: 'ws://192.168.0.179:9090' });
+
+            // Create a service client to call the ROS2 launch service:
+            var launchClient = new ROSLIB.Service({
+                ros: ros,
+                name: '/launch',
+                serviceType: 'tutorial_interfaces/srv/LaunchCommands'
+            });
+
+
+            // Create a service client to call the ROS2 launch service:
+            var launchClientStop = new ROSLIB.Service({
+                ros: ros,
+                name: '/launch_stop',
+                serviceType: 'tutorial_interfaces/srv/LaunchCommands'
+            });
+
+            //Create a function to call the launch service and pass the launch command as a string
+            function launchCommand() {
+                var request = new ROSLIB.ServiceRequest({
+                    command: "ros2 run pointcloud_server launch_realsense & "
+                });
+                launchClient.callService(request, function (result) {
+                    console.log('Result: ' + result.success);
+                });
+                refreshAfterDelay();
+            }
+            function refreshAfterDelay() {
+                setTimeout(function () {
+                    location.reload();
+                }, 2000); // Refresh the page after 2 seconds (2000 milliseconds)
+            }
+            //Create a function to call the launch service and pass the launch command as a string
+            function launchCommandStop() {
+                var request = new ROSLIB.ServiceRequest({
+                    command: "killall launch_realsense & "
+                });
+                launchClient.callService(request, function (result) {
+                    console.log('Result: ' + result.success);
+                });
+            }
+
+            // When the Rosbridge server connects, fill the span with id “status" with “successful"
+            ros.on('connection', () => {
+                document.getElementById("status").innerHTML = "successful";
+            });
+
+            // When the Rosbridge server experiences an error, fill the “status" span with the returned error
+            ros.on('error', (error) => {
+                document.getElementById("status").innerHTML = `errored out (${error})`;
+            });
+
+            // When the Rosbridge server shuts down, fill the “status" span with “closed"
+            ros.on('close', () => {
+                document.getElementById("status").innerHTML = "closed";
+            });
+
+
+
+            const image_listener = new ROSLIB.Topic({
+                ros,
+                name: "/image_topic",
+                messageType: "sensor_msgs/msg/Image"
+            });
+
+            image_listener.subscribe((message) => {
+                image_listener.unsubscribe();
+                console.log('Result: ' + message.data);
+            });
+
+
+            // Create a listener for /my_topic
+            const my_topic_listener = new ROSLIB.Topic({
+                ros,
+                name: "/my_topic",
+                messageType: "tutorial_interfaces/msg/Num"
+            });
+
+            // When we receive a message on /my_topic, add its data as a list item to the “messages" ul
+            my_topic_listener.subscribe((message) => {
+                const ul = document.getElementById("messages");
+                const newMessage = document.createElement("li");
+                newMessage.appendChild(document.createTextNode(message.num));
+                ul.appendChild(newMessage);
+            });
+        } catch (err) {
+            if (err instanceof ROSLIB.WebSocketClosedError) {
+                console.error("Error: Websocket closed");
+            } else {
+                console.error("Error:", err)
+            }
+        }
+    </script>
+
+    <h1>Realense Camera Topics In Remote ROS2</h1>
+    <p id="status"><noscript>JavaScript required</noscript></p>
+    <!-- <h2>Camera Topics</h2>
+    <ul id="camera_topics_list"></ul> -->
+    <h2>Image Topics</h2>
+    <ul id="image_topics_list"></ul>
+</body>
+
+</html>
